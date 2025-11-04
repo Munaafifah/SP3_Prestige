@@ -1,0 +1,7 @@
+01 ERR-REC.
+           03 ERR-KEY.
+              05 ERR-SERIES           PIC 9(01).
+              05 ERR-CODE             PIC 9(05).
+           03 ERR-DETAILS.
+              05 ERR-NAME             PIC X(60).
+              05 ERR-PADDING          PIC X(10).

@@ -1,0 +1,5 @@
+01 CY-REC.
+           03 CY-KEY        PIC X(04).    *Use X(02)
+           03 CY-DETAILS.
+              05 CY-NAME    PIC X(30).    *Use X(20)
+           03 CY-PADDING    PIC X(50).

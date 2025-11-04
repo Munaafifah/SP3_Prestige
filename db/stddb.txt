@@ -1,0 +1,19 @@
+01 STD-REC.
+          03 STD-KEY            PIC X(08).      *Use X(06)
+          03 STD-DETAILS.
+             05 STD-NAME        PIC X(50).      *Use X(40)
+             05 STD-ADD.
+                07 STD-ADD1     PIC X(50).      *Use X(40)
+                07 STD-ADD2     PIC X(50).      *Use X(40)
+                07 STD-ADD3     PIC X(50).      *Use X(40)
+             05 STD-GENDER      PIC X(01).      *M-Male, F-Female
+             05 STD-DOB-DMY     PIC 9(08).
+             05 STD-CY-KEY      PIC X(04).
+             05 STD-RC-KEY      PIC X(04).
+             05 STD-EMAIL       PIC X(50).
+             05 STD-MOBILE      PIC X(30).
+             05 STD-T-RG-KEY    PIC X(04).
+             05 STD-T-AGE       PIC 9(02).
+             05 STD-T-HEIGHT    PIC 999V99.
+             05 STD-T-WEIGHT    PIC 999V99.
+          03 STD-PADDING        PIC X(66).

@@ -1,0 +1,5 @@
+ 01 RC-REC.
+           03 RC-KEY       PIC X(04).    *Use X(02)
+           03 RC-DETAILS.
+              05 RC-NAME   PIC X(30).    *Use X(20)
+           03 RC-PADDING   PIC X(50).

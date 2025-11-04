@@ -1,0 +1,19 @@
+01 CFIG-REC
+           03 CFIG-KEY                   PIC X(01)
+           03 CFIG-DETAILS.
+              05 CFIG-AGE.
+                 07 CFIG-AGE-MIN         PIC 9(02)
+                 07 CFIG-AGE-MAX         PIC 9(02)
+              05 CFIG-HEIGHT.
+                 07 CFIG-HEIGHT-MIN      PIC 999V99
+                 07 CFIG-HEIGHT-MAX      PIC 999V99
+              05 CFIG-WEIGHT.
+                 07 CFIG-WEIGHT-MIN      PIC 999V99
+                 07 CFIG-WEIGHT-MAX      PIC 999V99
+           03 CFIG-EMAIL-CONFIG.
+              05 CFIG-EMAIL-SERVER       PIC X(50)
+              05 CFIG-EMAIL-PORT         PIC 9(03)
+              05 CFIG-SENDER-NAME        PIC X(30)
+              05 CFIG-SENDER-EMAIL       PIC X(50)
+              05 CFIG-SENDER-PASSWORD    PIC X(20)
+           03 CFIG-PADDING               PIC X(347)
