@@ -1,0 +1,95 @@
+IDENTIFICATION DIVISION.
+        PROGRAM-ID. F-CKSON.
+
+      * CHECK FATHER AND SON RELATIONSHIP BEFORE DELETE
+      * AUTHOR   DATE   TYPE   A/C   NOTES
+      * MUNA   13/10/25  -     PA     SP2
+      * MUNA   25/10/25  -     PA     SP3
+
+       ENVIRONMENT DIVISION.
+        INPUT-OUTPUT SECTION.
+         FILE-CONTROL.
+           COPY '/z/y25b31/sp3/lib/fd/fcstd'.
+
+       DATA DIVISION.
+        FILE SECTION.
+           COPY '/z/y25b31/sp3/lib/fd/fdstd'.
+
+        WORKING-STORAGE SECTION.
+           COPY '/z/y25b31/sp3/lib/fd/dbstd'.
+           COPY '/v/cps/lib/std/stdvar.def'.
+
+        LINKAGE SECTION.
+      * LINK TYPE : CY/RC/RG
+        01 LINK-KEY    PIC X(04).
+        01 LINK-TYPE   PIC X(02).
+        01 LINK-OK     PIC X(01).
+
+      ******************************************************************
+       PROCEDURE DIVISION USING LINK-KEY, LINK-TYPE, LINK-OK.
+
+        BEGIN.
+
+           OPEN INPUT STD-FILE.
+           MOVE 'N' TO S-RUN.
+           MOVE 'Y' TO LINK-OK.
+
+           EVALUATE LINK-TYPE
+            WHEN 'CY' PERFORM CY-RTN THRU CY-END
+            WHEN 'RC' PERFORM RC-RTN THRU RC-END
+            WHEN 'RG' PERFORM RG-RTN THRU RG-END
+           END-EVALUATE.
+
+        TERMINATION.
+           CLOSE STD-FILE.
+           EXIT PROGRAM.
+           STOP RUN.
+
+      ******************************************************************
+        CY-RTN.
+
+           INITIALIZE STD-REC.
+           MOVE LINK-KEY TO STD-CY-KEY.
+           START STD-FILE KEY >= STD-ALT-KEY1 INVALID
+                 NOT INVALID
+                     READ STD-FILE NEXT END
+                     NOT END
+                         IF STD-CY-KEY = LINK-KEY
+                            MOVE 'N' TO LINK-OK
+                         END-IF
+                     END-READ.
+
+        CY-END. EXIT.
+
+      *****************************************************************
+        RC-RTN.
+
+           INITIALIZE STD-REC.
+           MOVE LINK-KEY TO STD-RC-KEY.
+           START STD-FILE KEY > STD-ALT-KEY2 INVALID
+                 NOT INVALID
+                     READ STD-FILE NEXT END
+                     NOT END
+                         IF STD-RC-KEY = LINK-KEY
+                            MOVE 'N' TO LINK-OK
+                         END-IF
+                     END-READ.
+
+        RC-END. EXIT.
+
+      ******************************************************************
+        RG-RTN.
+
+           INITIALIZE STD-REC.
+           MOVE LINK-KEY TO STD-RG-KEY.
+           START STD-FILE KEY > STD-ALT-KEY3 INVALID
+                 NOT INVALID
+                     READ STD-FILE NEXT END
+                     NOT END
+                         IF STD-RG-KEY = LINK-KEY
+                            MOVE 'N' TO LINK-OK
+                         END-IF
+                     END-READ.
+
+        RG-END. EXIT.
+

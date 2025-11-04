@@ -1,0 +1,8 @@
+ERROR-RTN.
+
+           IF S-ERROR-CODE NOT = ZEROS
+              CALL   '/z/y25b31/sp3/lib/std/x-errmsg' USING S-ERROR-CODE
+              CANCEL '/z/y25b31/sp3/lib/std/x-errmsg'.
+           MOVE 'N' TO S-STATUS-CHECK.
+
+        ERROR-END. EXIT.

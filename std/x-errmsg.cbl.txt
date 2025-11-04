@@ -1,0 +1,96 @@
+IDENTIFICATION DIVISION.
+        PROGRAM-ID.   X-ERRMSG.
+
+      * Error Routine.
+      * Author   Date   Type A/C    Notes
+      * Ong    21/11/12 -    PA     Coding
+
+       ENVIRONMENT DIVISION.
+        INPUT-OUTPUT SECTION.
+         FILE-CONTROL.
+           COPY '/z/y25b31/sp3/lib/fd/fcerr'.
+
+       DATA DIVISION.
+        FILE SECTION.
+           COPY '/z/y25b31/sp3/lib/fd/fderr'.
+
+        WORKING-STORAGE SECTION.
+           COPY '/z/y25b31/sp3/lib/fd/dberr'.
+           COPY RESOURCE '/v/cps/lib/icon/scr-error.jpg'.
+
+        01 WS-ERROR-MSG                PIC X(50) VALUE ALL 'X'.
+        01 CONFIRM-BITMAP              PIC S9(9) COMP-4 VALUE ZEROS.
+        01 KEY-STATUS SPECIAL-NAMES CRT STATUS
+                                       PIC 9(05) VALUE ZEROS.
+           88 K-ENTER                  VALUE 013.
+        01 S-RUN                       PIC X(01).
+        01 S-STATUS-CHECK              PIC X(01).
+        01 S-WINDOW                    PIC X(10).
+        01 S-WINDOW2                   PIC X(10).
+
+        LINKAGE SECTION.
+        01 LINK-ERROR-CODE             PIC 9(06).
+
+        SCREEN SECTION.
+        01 ERROR-SCR.
+           03 BITMAP LINE 1 COL 1.5 LINES 58 SIZE 58
+              BITMAP-HANDLE CONFIRM-BITMAP
+              BITMAP-NUMBER 1.
+           03 LABEL LINE 1.4 COL 10 'Code:' COLOR 10.
+           03 LABEL COL 16 PIC 9(06) FROM LINK-ERROR-CODE.
+           03 LABEL LINE 2.2 COL 10 'Type:' COLOR 10.
+           03 LABEL COL 16 PIC X(70) FROM ERR-NAME SIZE 68
+                    NO-KEY-LETTER.
+           03 PUSH-BUTTON 'Close'
+              LINE 2 COL 83 LINES 1.25 SIZE 10 BELL
+              TERMINATION-VALUE = 013.
+
+      ******************************************************************
+       PROCEDURE DIVISION USING LINK-ERROR-CODE.
+
+        DECLARATIVES.
+
+          COPY '/z/y25b31/sp3/lib/fd/dcerr'.
+
+        END DECLARATIVES.
+
+      ******************************************************************
+        BEGIN.
+
+           MOVE 'N' TO S-RUN.
+           OPEN INPUT ERR-FILE.
+           MOVE 'Y' TO S-RUN.
+
+           CALL   '/v/cps/lib/std/x-dpwin2' USING 0002, S-WINDOW.
+           CANCEL '/v/cps/lib/std/x-dpwin2'.
+
+           DISPLAY FLOATING WINDOW COLOR 512
+           LINES 3.0 SIZE 95 CELL SIZE = ENTRY-FIELD FONT SEPARATE
+           TITLE 'Error'
+           POP-UP S-WINDOW2.
+
+           CALL 'W$BITMAP' USING 3, 'SCR-ERROR.JPG'
+                GIVING CONFIRM-BITMAP.
+
+           MOVE LINK-ERROR-CODE TO ERR-KEY.
+           READ ERR-FILE INVALID
+                INITIALIZE ERR-DETAILS.
+
+        BEGIN-SUB.
+
+           DISPLAY ERROR-SCR.
+           ACCEPT  ERROR-SCR.
+
+           IF NOT K-ENTER GO TO BEGIN-SUB.
+
+           INITIALIZE LINK-ERROR-CODE.
+
+           CLOSE WINDOW S-WINDOW2.
+           CLOSE WINDOW S-WINDOW.
+
+        TERMINATION.
+           CLOSE ERR-FILE.
+           EXIT PROGRAM.
+           STOP RUN.
+
+      * End of program.

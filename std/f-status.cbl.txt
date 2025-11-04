@@ -1,0 +1,209 @@
+IDENTIFICATION DIVISION.
+        PROGRAM-ID.   F-STATUS.
+
+      * Subroutine to display File Status.
+      * Author     Date     Remarks
+      * Ong     15.06.1999  Coding
+      * Low     24.11.1999  Add in Subroutine to call Windows Error Scr
+      * Ong     27.05.2004  Add in PA-RUN-MODE
+      * Ong     14.08.2006  Get User ID if Link-Status = 93 or 99
+      *********************************************************************
+      * Author    Date    Type    Acc   Note
+      * Alice   04/06/12                Change the lock by another user
+      *                                 message to lock by ?
+      * KB      24/09/18                CALL f-lockid2 to get lock user &
+      *                                 terminal
+      * KB      24/11/20                Add in Transaction Error
+      * TYLER   13/10/21                ADD SYS-OS 'Linus' Checking
+
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+        WORKING-STORAGE SECTION.
+        01 FKEY                      PIC 9(03) VALUE ZEROS.
+           88 FKEY-F7                VALUE 007.
+        01 S-PAUSE                   PIC X(01) VALUE SPACES.
+        01 S-WINDOW                  PIC X(10) VALUE SPACES.
+        01 S-WINDOW2                 PIC X(10) VALUE SPACES.
+        01 CURRENT-PREFIX            PIC X(20) VALUE SPACES.
+        01 WS-RUN-MODE               PIC X(01) VALUE SPACES.
+
+        01 SYS-INFO.
+           03 SYS-OS                      PIC X(10).
+           03 SYS-USER                    PIC X(12).
+           03 SYS-TERM                    PIC X(12).
+           03 FIL                         PIC X(04).
+           03 SYS-RUNTIME.
+              05 SYS-RTIME-VER1           PIC 99.
+              05 SYS-RTIME-VER2           PIC 99.
+              05 SYS-RTIME-RELEASE        PIC 99.
+
+        01 WS-MISC.
+           03 WS-UID                 PIC X(20) VALUE SPACES.
+           03 WS-CLIENT-NAME         PIC X(20) VALUE SPACES.
+           03 WS-DESC                PIC X(60) VALUE SPACES.
+           03 WS-DATANAME            PIC X(60) VALUE SPACES.
+           03 WS-STATUS-CODE         PIC X(20) VALUE SPACES.
+           03 WS-STRING              PIC X(150).
+
+        01 WS-ERROR-STATUS.
+           03 WS-PRI-ERROR           PIC X(02).
+           03 WS-SEC-ERROR           PIC X(10).
+
+        LINKAGE SECTION.
+        01 LINK-DATA.
+           03 LINK-FILENAME          PIC X(40).
+           03 LINK-DATANAME          PIC X(40).
+           03 LINK-STATUS            PIC X(02).
+
+        SCREEN SECTION.
+        01 ERRMSG-SCR.
+           03 LINE 01 COL 02 'File Name   :'.
+           03 COL + 2 PIC X(50) FROM LINK-FILENAME HIGH.
+           03 LINE 02 COL 02 'File Status :'.
+           03 COL + 2 PIC X(50) FROM WS-DESC HIGH.
+           03 COL  63 'F7-Zoom Details' BLINK.
+           03 COL + 2 PIC X(01) USING S-PAUSE BELL AUTO OFF.
+
+        01 ERRMSG-SCR2.
+           03 LINE 01 COL 02 'File Name.....'.
+           03 COL + 2 PIC X(40) FROM LINK-FILENAME HIGH.
+           03 LINE 02 COL 02 'Data Name.....'.
+           03 COL + 2 PIC X(40) FROM WS-DATANAME HIGH.
+           03 LINE 03 COL 02 'Status Code...'.
+           03 COL + 2 PIC X(20) FROM WS-STATUS-CODE HIGH.
+           03 LINE 04 COL 02 'Condition.....'.
+           03 COL + 2 PIC X(43) FROM WS-DESC HIGH.
+           03 COL + 1 PIC X(01) USING S-PAUSE.
+
+      ******************************************************************
+       PROCEDURE DIVISION USING LINK-DATA.
+        BEGIN.
+
+           ACCEPT SYS-INFO FROM SYSTEM-INFO.
+           ACCEPT WS-RUN-MODE FROM ENVIRONMENT 'PA-RUN-MODE'.
+           IF WS-RUN-MODE = 'C'
+              GO TO TERMINATION.
+
+      * Call to get Lock User ID.
+           INITIALIZE WS-UID, WS-CLIENT-NAME.
+           IF LINK-STATUS = '93' OR '99'
+              IF NOT (SYS-OS = 'WINDOWS' OR 'WIN/NT')
+                 CALL   '/v/cps/lib/std/f-lockid2' USING WS-UID,
+                                                         WS-CLIENT-NAME
+                 CANCEL '/v/cps/lib/std/f-lockid2'
+              END-IF
+              IF WS-UID = SPACES
+                 MOVE '?' TO WS-UID.
+      *           MOVE 'another user' TO WS-UID.
+
+           EVALUATE LINK-STATUS
+            WHEN '  ' MOVE 'No File status encountered'       TO WS-DESC
+            WHEN '00' MOVE 'Operation successful'             TO WS-DESC
+            WHEN '02' MOVE 'Duplicate key found'              TO WS-DESC
+            WHEN '05' MOVE 'File missing'                     TO WS-DESC
+            WHEN '07' MOVE 'File closed on a non-reel medium' TO WS-DESC
+            WHEN '10' MOVE 'End of File'                      TO WS-DESC
+            WHEN '21' MOVE 'Primary key out of sequence'      TO WS-DESC
+            WHEN '22' MOVE 'Duplicate record'                 TO WS-DESC
+            WHEN '23' MOVE 'Record not found'                 TO WS-DESC
+            WHEN '24' MOVE 'Disk Full'                        TO WS-DESC
+            WHEN '30' MOVE 'Permanent error'                  TO WS-DESC
+            WHEN '34' MOVE 'Disk full for Seq/Sort File'      TO WS-DESC
+            WHEN '35' MOVE 'File not found'                   TO WS-DESC
+            WHEN '37' MOVE 'File opened error'                TO WS-DESC
+            WHEN '38' MOVE 'File closed with lock previously' TO WS-DESC
+            WHEN '39' MOVE 'File is conflicts with database description'
+                                                              TO WS-DESC
+            WHEN '41' MOVE 'File is already opened'           TO WS-DESC
+            WHEN '42' MOVE 'File not open'                    TO WS-DESC
+            WHEN '43' MOVE 'No current record defined for seq. access'
+                                                              TO WS-DESC
+            WHEN '44' MOVE 'Record size has changed'          TO WS-DESC
+            WHEN '46' MOVE 'No current record'                TO WS-DESC
+            WHEN '47' MOVE 'File not open'                    TO WS-DESC
+            WHEN '48' MOVE 'File not open'                    TO WS-DESC
+            WHEN '49' MOVE 'File not open'                    TO WS-DESC
+      *     WHEN '93' STRING 'File is locked by ', WS-UID,
+      *                      DELIMITED BY SIZE INTO WS-DESC
+            WHEN '93' INITIALIZE WS-STRING
+                      STRING 'File is locked by ', WS-UID, ' (',
+                             WS-CLIENT-NAME, ')'
+                             DELIMITED BY SIZE INTO WS-STRING
+                      CALL   '/v/cps/lib/std/f-align' USING 1, WS-STRING
+                      CANCEL '/v/cps/lib/std/f-align'
+                      MOVE WS-STRING TO WS-DESC
+            WHEN '94' MOVE 'Too many files or linage out of range'
+                                                              TO WS-DESC
+            WHEN '98' MOVE 'Indexed file corrupted'           TO WS-DESC
+      *     WHEN '99' STRING 'Record is locked by ', WS-UID
+      *                      DELIMITED BY SIZE INTO WS-DESC
+            WHEN '99' INITIALIZE WS-STRING
+                      STRING 'Record is locked by ', WS-UID, ' (',
+                             WS-CLIENT-NAME, ')'
+                             DELIMITED BY SIZE INTO WS-STRING
+                      CALL   '/v/cps/lib/std/f-align' USING 1, WS-STRING
+                      CANCEL '/v/cps/lib/std/f-align'
+                      MOVE WS-STRING TO WS-DESC
+            WHEN '9A' MOVE 'Inadequate memory for sort operation'
+                                                              TO WS-DESC
+            WHEN '9B' MOVE 'File System cannot process reverse manner'
+                                                              TO WS-DESC
+            WHEN '9C' MOVE 'Insufficient lock table'          TO WS-DESC
+            WHEN '9E' MOVE 'Transaction error. '              TO WS-DESC
+           END-EVALUATE.
+
+           IF SYS-OS = 'WINDOWS' OR 'WIN/NT' OR 'Unix' OR 'Linux'
+              CALL   '/v/cps/lib/std/x-stat2' USING
+                     LINK-DATA, WS-DESC
+              CANCEL '/v/cps/lib/std/x-stat2'
+              GO TO TERMINATION.
+
+      * Display File Status Message.
+           DISPLAY WINDOW AT 2301 SIZE 80 LINES 02 ERASE
+           POP-UP S-WINDOW.
+
+        BEGIN-SUB.
+
+           DISPLAY ERRMSG-SCR.
+           ACCEPT  ERRMSG-SCR.
+           ACCEPT  FKEY FROM ESCAPE KEY.
+
+           IF FKEY-F7
+              PERFORM ZOOM-RTN THRU ZOOM-END.
+
+           CLOSE WINDOW S-WINDOW.
+
+        TERMINATION.
+           EXIT PROGRAM.
+           STOP RUN.
+
+      *******************************************************************
+        ZOOM-RTN.
+
+      * To get current code-prefix
+           CALL   '/v/cps/lib/std/f-gtpfix' USING CURRENT-PREFIX.
+           CANCEL '/v/cps/lib/std/f-gtpfix'.
+
+           MOVE SPACES TO WS-DATANAME.
+           STRING CURRENT-PREFIX DELIMITED BY ' ',
+                  LINK-DATANAME DELIMITED BY SIZE INTO WS-DATANAME.
+
+           INITIALIZE WS-ERROR-STATUS.
+           CALL   'C$RERR' USING WS-ERROR-STATUS.
+           CANCEL 'C$RERR'.
+
+           STRING LINK-STATUS, ' - ', WS-SEC-ERROR
+                  DELIMITED BY SIZE INTO WS-STATUS-CODE.
+
+           DISPLAY WINDOW AT 2010 SIZE 62 LINES 04 BOXED
+           TITLE 'File Status'
+           POP-UP S-WINDOW2.
+           DISPLAY ERRMSG-SCR2.
+           ACCEPT  ERRMSG-SCR2.
+           ACCEPT  FKEY FROM ESCAPE KEY.
+
+           CLOSE WINDOW S-WINDOW2.
+
+        ZOOM-END. EXIT.
+
+      * End of Program.

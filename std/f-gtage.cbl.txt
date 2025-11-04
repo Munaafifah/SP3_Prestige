@@ -1,0 +1,67 @@
+IDENTIFICATION DIVISION.
+        PROGRAM-ID. F-GTAGE.
+
+      * Subroutine to get # of Days between Dates (exclude starting
+      * date).
+      * COPY from /v/cps/lib/std/f-gtage4
+      * AUTHOR    DATE   TYPE    A/C    NOTES
+      * MUNA   13/10/25   -      PA      SP2
+      * MUNA   24/10/25   -      PA     SP3
+
+       ENVIRONMENT DIVISION.
+       DATA DIVISION.
+        WORKING-STORAGE SECTION.
+        01 WS-DAY-TABLE.
+           03 WS-NO                    PIC X(36) VALUE
+              '000031059090120151181212243273304334'.
+           03 WS-DAY REDEFINES WS-NO   PIC 9(03) OCCURS 12 TIMES.
+
+        01 WS-MISC.
+           03 WS-YYYYMMDD1             PIC 9(08).
+           03 WS-YYYYMMDD2             PIC 9(08).
+           03 WS-MTH                   PIC 9(02).
+           03 WS-COMP-MTH              PIC S9(07).
+           03 OCCURS 2 TIMES.
+              05 WS-YYYYMMDD.
+                 07 WS-YYYY            PIC 9(04).
+                 07 WS-MM              PIC 9(02).
+                 07 WS-DD              PIC 9(02).
+              05 WS-DAY-COUNT          PIC S9(07).
+
+        LINKAGE SECTION.
+        01 LINK-DMY                     PIC 9(08).
+        01 LINK-DAY-COUNT               PIC 9(02).
+
+      *****************************************************************
+       PROCEDURE DIVISION USING LINK-DMY, LINK-DAY-COUNT.
+
+        BEGIN.
+
+           INITIALIZE LINK-DAY-COUNT, WS-MISC.
+           MOVE LINK-DMY TO WS-YYYYMMDD1.
+           ACCEPT WS-YYYYMMDD2 FROM CENTURY-DATE.
+           CALL   '/v/cps/lib/std/f-cvdmy' USING WS-YYYYMMDD1
+           CANCEL '/v/cps/lib/std/f-cvdmy'
+
+           MOVE WS-YYYYMMDD1 TO WS-YYYYMMDD(01).
+           MOVE WS-YYYYMMDD2 TO WS-YYYYMMDD(02).
+
+           PERFORM GET-TOTAL-DAY THRU GET-TOTAL-DAY-END.
+
+        TERMINATION.
+           EXIT PROGRAM.
+           STOP RUN.
+
+      ******************************************************************
+        GET-TOTAL-DAY.
+
+           COMPUTE WS-DAY-COUNT(01) = (WS-YYYY(01) * 12) + WS-MM(01).
+           COMPUTE WS-DAY-COUNT(02) = (WS-YYYY(02) * 12) + WS-MM(02).
+
+           COMPUTE WS-COMP-MTH = WS-DAY-COUNT(02) - WS-DAY-COUNT(01).
+           COMPUTE LINK-DAY-COUNT = (WS-COMP-MTH / 12).
+
+        GET-TOTAL-DAY-END. EXIT.
+
+      *****************************************************************
+      * End of program
